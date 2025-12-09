@@ -14,7 +14,7 @@ private:
 
 public:
     Book();
-    Book(int id, const string &title, const string &author, int year, const string &publisher);
+    Book(int id, const string &title, const string &author, int year, const string &publisher = "Unknown Publisher");
 
     // Getters
     int getId() const;
