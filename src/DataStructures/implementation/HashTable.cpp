@@ -94,4 +94,9 @@ bool HashTable<K, V>::remove(const K &key)
     return false;
 }
 
-template class HashTable<string, string>;
+// template class HashTable<string, string>;
+
+
+#include "../entities/header/book.h"  // Include Book so it knows what 'Book' is
+template class HashTable<int, Book>;  // Explicitly instantiate for Int and Book
+//The HashTable.cpp file currently only supports <string, string>. Since bookmanager uses <int, Book>, we need to add this line at the bottom of HashTable.cpp so the compiler generates the code for it:
