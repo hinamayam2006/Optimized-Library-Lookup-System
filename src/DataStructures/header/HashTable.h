@@ -3,6 +3,7 @@
 
 #include <string>
 #include <functional>
+#include <vector>
 using namespace std;
 
 template <typename K, typename V>
@@ -32,6 +33,9 @@ public:
     V *search(const K &key);
     bool update(const K &key, const V &newValue);
     bool remove(const K &key);
+
+    // Iterator-like access for all entries
+    vector<pair<K, V>> getAllEntries() const;
 };
 
 // Template Implementation
@@ -126,6 +130,24 @@ bool HashTable<K, V>::remove(const K &key)
     }
 
     return false;
+}
+
+template <typename K, typename V>
+vector<pair<K, V>> HashTable<K, V>::getAllEntries() const
+{
+    vector<pair<K, V>> entries;
+
+    for (int i = 0; i < TABLE_SIZE; i++)
+    {
+        HashNode<K, V> *entry = table[i];
+        while (entry)
+        {
+            entries.push_back(make_pair(entry->key, entry->value));
+            entry = entry->next;
+        }
+    }
+
+    return entries;
 }
 
 #endif

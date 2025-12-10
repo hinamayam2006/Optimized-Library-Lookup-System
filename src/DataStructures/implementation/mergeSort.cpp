@@ -1,4 +1,33 @@
 #include "../header/mergeSort.h"
+#include "../../entities/header/book.h"
+
+// Wrapper structures for Book pointer sorting
+struct BookTitleWrapper {
+    Book* book;
+    BookTitleWrapper() : book(nullptr) {}
+    BookTitleWrapper(Book* b) : book(b) {}
+    bool operator<(const BookTitleWrapper& other) const {
+        return book->getTitle() < other.book->getTitle();
+    }
+};
+
+struct BookYearWrapper {
+    Book* book;
+    BookYearWrapper() : book(nullptr) {}
+    BookYearWrapper(Book* b) : book(b) {}
+    bool operator<(const BookYearWrapper& other) const {
+        return book->getYear() < other.book->getYear();
+    }
+};
+
+struct BookAuthorWrapper {
+    Book* book;
+    BookAuthorWrapper() : book(nullptr) {}
+    BookAuthorWrapper(Book* b) : book(b) {}
+    bool operator<(const BookAuthorWrapper& other) const {
+        return book->getAuthor() < other.book->getAuthor();
+    }
+};
 
 template <typename T>
 void merge(T arr[], int left, int mid, int right)
@@ -43,3 +72,6 @@ void mergeSort(T arr[], int left, int right)
 
 template void mergeSort<string>(string[], int, int);
 template void mergeSort<int>(int[], int, int);
+template void mergeSort<BookTitleWrapper>(BookTitleWrapper[], int, int);
+template void mergeSort<BookYearWrapper>(BookYearWrapper[], int, int);
+template void mergeSort<BookAuthorWrapper>(BookAuthorWrapper[], int, int);
