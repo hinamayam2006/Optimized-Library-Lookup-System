@@ -1,6 +1,11 @@
 #include "../header/HashTable.h"
 #include <functional>
 
+// HashNode constructor
+template <typename K, typename V>
+HashNode<K, V>::HashNode(K k, V v) : key(k), value(v), next(nullptr) {}
+
+// HashTable implementations
 template <typename K, typename V>
 HashTable<K, V>::HashTable()
 {
@@ -35,10 +40,8 @@ bool HashTable<K, V>::insert(const K &key, const V &value)
 {
     int index = hashFunction(key);
     HashNode<K, V> *newNode = new HashNode<K, V>(key, value);
-
     newNode->next = table[index];
     table[index] = newNode;
-
     return true;
 }
 
@@ -47,7 +50,6 @@ V *HashTable<K, V>::search(const K &key)
 {
     int index = hashFunction(key);
     HashNode<K, V> *entry = table[index];
-
     while (entry)
     {
         if (entry->key == key)
@@ -63,7 +65,6 @@ bool HashTable<K, V>::update(const K &key, const V &newValue)
     V *val = search(key);
     if (!val)
         return false;
-
     *val = newValue;
     return true;
 }
@@ -90,13 +91,28 @@ bool HashTable<K, V>::remove(const K &key)
         prev = entry;
         entry = entry->next;
     }
-
     return false;
 }
 
-// template class HashTable<string, string>;
+template <typename K, typename V>
+vector<pair<K, V>> HashTable<K, V>::getAllEntries() const
+{
+    vector<pair<K, V>> entries;
+    for (int i = 0; i < TABLE_SIZE; i++)
+    {
+        HashNode<K, V> *entry = table[i];
+        while (entry)
+        {
+            entries.push_back(make_pair(entry->key, entry->value));
+            entry = entry->next;
+        }
+    }
+    return entries;
+}
 
-
-#include "../entities/header/book.h"  // Include Book so it knows what 'Book' is
-template class HashTable<int, Book>;  // Explicitly instantiate for Int and Book
-//The HashTable.cpp file currently only supports <string, string>. Since bookmanager uses <int, Book>, we need to add this line at the bottom of HashTable.cpp so the compiler generates the code for it:
+// -----------------------
+// Explicit template instantiation
+// -----------------------
+#include "../entities/header/book.h"
+template class HashTable<int, Book>;      // for your BookManager usage
+template class HashTable<string, string>; // if you need string/string hash table

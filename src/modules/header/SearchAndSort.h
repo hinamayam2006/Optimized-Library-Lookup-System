@@ -25,12 +25,12 @@ public:
 
     // Add book title to Trie for auto-completion
     void addToAutoComplete(const string &title);
-    
+
     // Load all book titles from BookManager into Trie
     void loadAllBooksToTrie();
 
     // Search function - search books by title
-    vector<Book *> searchBooksByTitle(const string &title);
+    vector<Book> searchBooksByTitle(const string &title);
 
     // Sorting functions
     void sortBooksByTitle(Book *books[], int size);

@@ -91,9 +91,9 @@ void SearchAndSort::loadAllBooksToTrie()
 }
 
 // Search function - search books by partial title match
-vector<Book *> SearchAndSort::searchBooksByTitle(const string &searchTerm)
+vector<Book> SearchAndSort::searchBooksByTitle(const string &searchTerm)
 {
-    vector<Book *> results;
+    vector<Book> results;
 
     if (searchTerm.empty())
     {
@@ -108,16 +108,16 @@ vector<Book *> SearchAndSort::searchBooksByTitle(const string &searchTerm)
     transform(lowerSearchTerm.begin(), lowerSearchTerm.end(), lowerSearchTerm.begin(), ::tolower);
 
     // Search through all books for title matches
-    for (auto &entry : allBooks)
+    for (const auto &entry : allBooks)
     {
-        Book &book = const_cast<Book &>(entry.second);
+        const Book &book = entry.second;
         string lowerTitle = book.getTitle();
         transform(lowerTitle.begin(), lowerTitle.end(), lowerTitle.begin(), ::tolower);
 
         // Check if the search term is found in the title
         if (lowerTitle.find(lowerSearchTerm) != string::npos)
         {
-            results.push_back(&book);
+            results.push_back(book);
         }
     }
 
