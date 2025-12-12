@@ -151,7 +151,7 @@ void BookManager::loadBooksFromCSV(std::string filename)
 
     std::string line;
     // Skip header line
-    std::getline(file, line);
+    // std::getline(file, line);
 
     while (std::getline(file, line))
     {
