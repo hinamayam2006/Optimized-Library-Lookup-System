@@ -1,0 +1,32 @@
+# Qt Library Management System - Requirements
+
+## System Requirements
+- Windows 10 or later
+- MinGW-w64 GCC 13.2.0 or later
+- CMake 3.16 or later
+
+## Qt Framework
+- Qt 6.10.1 (MinGW 64-bit)
+- Qt6::Core
+- Qt6::Widgets
+- Qt6::Gui
+
+## Build Tools
+- CMake 3.16+
+- MinGW32-make
+- Qt windeployqt (for deployment)
+
+## Installation Paths (Update as needed)
+- Qt Installation: D:/HP/BigThings/6.10.1/mingw_64
+- Project Directory: D:/HP/Projects/DSAE/Optimized-Library-Lookup-System
+
+## Data Files Required
+- data/book.csv (Book database)
+- data/borrow_records.csv (Borrowing records)
+- data/user.csv (User database - optional)
+
+## C++ Standard
+- C++17 or higher
+
+## Note
+This project has been migrated from FLTK to Qt 6 for modern GUI capabilities.

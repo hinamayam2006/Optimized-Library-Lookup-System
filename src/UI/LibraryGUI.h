@@ -1,18 +1,16 @@
 #ifndef LIBRARYGUI_H
 #define LIBRARYGUI_H
 
-#include <FL/Fl.H>
-#include <FL/Fl_Window.H>
-#include <FL/Fl_Tabs.H>
-#include <FL/Fl_Group.H>
-#include <FL/Fl_Button.H>
-#include <FL/Fl_Input.H>
-#include <FL/Fl_Output.H>
-#include <FL/Fl_Browser.H>
-#include <FL/Fl_Text_Editor.H>
-#include <FL/Fl_Text_Buffer.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Int_Input.H>
+#include <QMainWindow>
+#include <QWidget>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QTabWidget>
+#include <QPushButton>
+#include <QLineEdit>
+#include <QTextEdit>
+#include <QListWidget>
+#include <QLabel>
 #include <string>
 #include <vector>
 
@@ -20,94 +18,74 @@
 #include "SearchAndSort.h"
 #include "Borrower.h"
 
-class LibraryGUI : public Fl_Window
+class LibraryGUI : public QMainWindow
 {
+    Q_OBJECT
+
 private:
     BookManager *bookManager;
     SearchAndSort *searchAndSort;
     Borrower *borrower;
 
+    // Main Widget and Layout
+    QWidget *centralWidget;
+    QTabWidget *tabWidget;
+
     // Book Management Tab Components
-    Fl_Group *bookManagementTab;
-    Fl_Int_Input *bookIdInput;
-    Fl_Input *bookTitleInput;
-    Fl_Input *bookAuthorInput;
-    Fl_Int_Input *bookYearInput;
-    Fl_Input *bookPublisherInput;
-    Fl_Button *addBookBtn;
-    Fl_Button *updateBookBtn;
-    Fl_Button *deleteBookBtn;
-    Fl_Button *searchBookBtn;
-    Fl_Button *loadBooksBtn;
-    Fl_Button *saveBooksBtn;
-    Fl_Button *displayAllBooksBtn;
-    Fl_Browser *bookDisplayBrowser;
-    Fl_Output *bookStatusOutput;
+    QWidget *bookManagementTab;
+    QLineEdit *bookIdInput;
+    QLineEdit *bookTitleInput;
+    QLineEdit *bookAuthorInput;
+    QLineEdit *bookYearInput;
+    QLineEdit *bookPublisherInput;
+    QPushButton *addBookBtn;
+    QPushButton *updateBookBtn;
+    QPushButton *deleteBookBtn;
+    QPushButton *searchBookBtn;
+    QPushButton *loadBooksBtn;
+    QPushButton *saveBooksBtn;
+    QPushButton *displayAllBooksBtn;
+    QListWidget *bookDisplayList;
+    QLabel *bookStatusLabel;
 
     // Search & Sort Tab Components
-    Fl_Group *searchSortTab;
-    Fl_Input *searchTermInput;
-    Fl_Button *searchByTitleBtn;
-    Fl_Button *sortByTitleBtn;
-    Fl_Button *sortByYearBtn;
-    Fl_Button *sortByAuthorBtn;
-    Fl_Button *loadAutoCompleteBtn;
-    Fl_Browser *searchResultsBrowser;
-    Fl_Browser *suggestionsBrowser;
-    Fl_Output *searchStatusOutput;
+    QWidget *searchSortTab;
+    QLineEdit *searchTermInput;
+    QPushButton *searchByTitleBtn;
+    QPushButton *sortByTitleBtn;
+    QPushButton *sortByYearBtn;
+    QPushButton *sortByAuthorBtn;
+    QPushButton *loadAutoCompleteBtn;
+    QListWidget *searchResultsList;
+    QListWidget *suggestionsList;
+    QLabel *searchStatusLabel;
 
     // Borrower Management Tab Components
-    Fl_Group *borrowerTab;
-    Fl_Input *borrowerUserNameInput;
-    Fl_Input *borrowerBookTitleInput;
-    Fl_Input *borrowerDateInput;
-    Fl_Button *borrowBookBtn;
-    Fl_Button *returnBookBtn;
-    Fl_Button *viewUserBorrowsBtn;
-    Fl_Button *viewBookBorrowersBtn;
-    Fl_Button *viewHistoryBtn;
-    Fl_Button *loadBorrowRecordsBtn;
-    Fl_Browser *borrowerResultsBrowser;
-    Fl_Browser *borrowerHistoryBrowser;
-    Fl_Output *borrowerStatusOutput;
+    QWidget *borrowerTab;
+    QLineEdit *borrowerUserNameInput;
+    QLineEdit *borrowerBookTitleInput;
+    QLineEdit *borrowerDateInput;
+    QPushButton *borrowBookBtn;
+    QPushButton *returnBookBtn;
+    QPushButton *viewUserBorrowsBtn;
+    QPushButton *viewBookBorrowersBtn;
+    QPushButton *viewHistoryBtn;
+    QPushButton *loadBorrowRecordsBtn;
+    QListWidget *borrowerResultsList;
+    QListWidget *borrowerHistoryList;
+    QLabel *borrowerStatusLabel;
 
     // Helper methods
+    void setupUI();
+    QWidget *createBookManagementTab();
+    QWidget *createSearchSortTab();
+    QWidget *createBorrowerTab();
     void refreshBookDisplay();
     void updateStatusMessage(const std::string &message);
     void updateSearchStatus(const std::string &message);
     void showAutoCompleteSuggestions(const std::string &prefix);
-    static void searchTermChangedCallback(Fl_Widget *w, void *data);
-    static void suggestionClickedCallback(Fl_Widget *w, void *data);
-    void handleSuggestionClick();
 
-public:
-    LibraryGUI(int w, int h, const char *title);
-    ~LibraryGUI();
-
-    // Callback methods (static to work with FLTK)
-    static void addBookCallback(Fl_Widget *w, void *data);
-    static void updateBookCallback(Fl_Widget *w, void *data);
-    static void deleteBookCallback(Fl_Widget *w, void *data);
-    static void searchBookCallback(Fl_Widget *w, void *data);
-    static void loadBooksCallback(Fl_Widget *w, void *data);
-    static void saveBooksCallback(Fl_Widget *w, void *data);
-    static void displayAllBooksCallback(Fl_Widget *w, void *data);
-
-    static void searchByTitleCallback(Fl_Widget *w, void *data);
-    static void sortByTitleCallback(Fl_Widget *w, void *data);
-    static void sortByYearCallback(Fl_Widget *w, void *data);
-    static void sortByAuthorCallback(Fl_Widget *w, void *data);
-    static void loadAutoCompleteCallback(Fl_Widget *w, void *data);
-
-    // Borrower Callbacks
-    static void borrowBookCallback(Fl_Widget *w, void *data);
-    static void returnBookCallback(Fl_Widget *w, void *data);
-    static void viewUserBorrowsCallback(Fl_Widget *w, void *data);
-    static void viewBookBorrowersCallback(Fl_Widget *w, void *data);
-    static void viewHistoryCallback(Fl_Widget *w, void *data);
-    static void loadBorrowRecordsCallback(Fl_Widget *w, void *data);
-
-    // Instance methods that callbacks call
+private slots:
     void handleAddBook();
     void handleUpdateBook();
     void handleDeleteBook();
@@ -121,6 +99,8 @@ public:
     void handleSortByYear();
     void handleSortByAuthor();
     void handleLoadAutoComplete();
+    void handleSearchTermChanged();
+    void handleSuggestionClick();
 
     void handleBorrowBook();
     void handleReturnBook();
@@ -129,6 +109,10 @@ public:
     void handleViewHistory();
     void handleLoadBorrowRecords();
     void updateBorrowerStatus(const std::string &message);
+
+public:
+    explicit LibraryGUI(QWidget *parent = nullptr);
+    ~LibraryGUI();
 };
 
 #endif

@@ -4,6 +4,15 @@ project(OptimizedLibraryLookupSystem)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Qt configuration
+set(CMAKE_PREFIX_PATH "D:/HP/BigThings/6.10.1/mingw_64")
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+
+# Find Qt6
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui)
+
 # Add include directories for your own headers
 include_directories(
     src/DataStructures/header
@@ -12,14 +21,7 @@ include_directories(
     src/UI
 )
 
-# Explicitly add FLTK include directory
-include_directories("D:/libs/fltk/install/include")
-
-# Tell CMake where to find FLTKConfig.cmake
-set(FLTK_DIR "D:/libs/fltk/install/CMake")
-find_package(FLTK 1.3 REQUIRED CONFIG)
-
-# Collect source files (exclude HashTable.cpp - it's template-only in header)
+# Collect source files
 file(GLOB_RECURSE SOURCES
     "src/DataStructures/implementation/*.cpp"
     "src/entities/implementation/*.cpp"
@@ -27,30 +29,17 @@ file(GLOB_RECURSE SOURCES
     "src/UI/LibraryGUI.cpp"
 )
 
-# Create executable with GUI mode (WIN32 flag for no console window)
-add_executable(LibrarySystem WIN32 ${SOURCES} src/main.cpp)
+# Create executable
+add_executable(LibrarySystem ${SOURCES} src/main.cpp)
 
-# Link FLTK libraries explicitly
+# Link Qt libraries
 target_link_libraries(LibrarySystem 
-    "D:/libs/fltk/install/lib/libfltk.a"
-    "D:/libs/fltk/install/lib/libfltk_forms.a"
-    "D:/libs/fltk/install/lib/libfltk_images.a"
-    "D:/libs/fltk/install/lib/libfltk_png.a"
-    "D:/libs/fltk/install/lib/libfltk_jpeg.a"
-    "D:/libs/fltk/install/lib/libfltk_z.a"
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Gui
 )
 
-# Link Windows libraries that FLTK needs
-target_link_libraries(LibrarySystem
-    ws2_32
-    comctl32
-    gdi32
-    ole32
-    oleaut32
-    uuid
-    comdlg32
-    advapi32
-)
-
-# Compile with GUI support
-target_compile_definitions(LibrarySystem PRIVATE USE_GUI)
+# Set Windows subsystem to hide console window
+if(WIN32)
+    target_link_options(LibrarySystem PRIVATE -mwindows)
+endif()
