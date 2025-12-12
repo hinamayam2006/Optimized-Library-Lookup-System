@@ -18,12 +18,14 @@
 
 #include "BookManager.h"
 #include "SearchAndSort.h"
+#include "Borrower.h"
 
 class LibraryGUI : public Fl_Window
 {
 private:
     BookManager *bookManager;
     SearchAndSort *searchAndSort;
+    Borrower *borrower;
 
     // Book Management Tab Components
     Fl_Group *bookManagementTab;
@@ -54,6 +56,21 @@ private:
     Fl_Browser *suggestionsBrowser;
     Fl_Output *searchStatusOutput;
 
+    // Borrower Management Tab Components
+    Fl_Group *borrowerTab;
+    Fl_Input *borrowerUserNameInput;
+    Fl_Input *borrowerBookTitleInput;
+    Fl_Input *borrowerDateInput;
+    Fl_Button *borrowBookBtn;
+    Fl_Button *returnBookBtn;
+    Fl_Button *viewUserBorrowsBtn;
+    Fl_Button *viewBookBorrowersBtn;
+    Fl_Button *viewHistoryBtn;
+    Fl_Button *loadBorrowRecordsBtn;
+    Fl_Browser *borrowerResultsBrowser;
+    Fl_Browser *borrowerHistoryBrowser;
+    Fl_Output *borrowerStatusOutput;
+
     // Helper methods
     void refreshBookDisplay();
     void updateStatusMessage(const std::string &message);
@@ -82,6 +99,14 @@ public:
     static void sortByAuthorCallback(Fl_Widget *w, void *data);
     static void loadAutoCompleteCallback(Fl_Widget *w, void *data);
 
+    // Borrower Callbacks
+    static void borrowBookCallback(Fl_Widget *w, void *data);
+    static void returnBookCallback(Fl_Widget *w, void *data);
+    static void viewUserBorrowsCallback(Fl_Widget *w, void *data);
+    static void viewBookBorrowersCallback(Fl_Widget *w, void *data);
+    static void viewHistoryCallback(Fl_Widget *w, void *data);
+    static void loadBorrowRecordsCallback(Fl_Widget *w, void *data);
+
     // Instance methods that callbacks call
     void handleAddBook();
     void handleUpdateBook();
@@ -96,6 +121,14 @@ public:
     void handleSortByYear();
     void handleSortByAuthor();
     void handleLoadAutoComplete();
+
+    void handleBorrowBook();
+    void handleReturnBook();
+    void handleViewUserBorrows();
+    void handleViewBookBorrowers();
+    void handleViewHistory();
+    void handleLoadBorrowRecords();
+    void updateBorrowerStatus(const std::string &message);
 };
 
 #endif

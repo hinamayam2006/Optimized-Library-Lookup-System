@@ -1,15 +1,17 @@
 #include "../../DataStructures/header/HashTable.h"
 #include "../../DataStructures/header/linkedList.h"
 #include "../header/Borrower.h"
+#include "../header/BookManager.h"
 #include <sstream>
 #include <ctime>
 
 Borrower::Borrower(const std::string &borrowCsvPath)
 {
-    userToBooks = new HashTable<int, LinkedList<std::string>>();
-    bookToUsers = new HashTable<int, LinkedList<std::string>>();
+    userToBooks = new HashTable<std::string, LinkedList<std::string>>();
+    bookToUsers = new HashTable<std::string, LinkedList<std::string>>();
     history = new LinkedList<std::string>();
     csvFilePath = borrowCsvPath;
+    bookManager = nullptr;
 
     // Try to load any existing records
     loadBorrowRecordsFromCSV(csvFilePath);
@@ -23,7 +25,7 @@ Borrower::~Borrower()
     delete history;
 }
 
-void Borrower::appendRecordToCSV(int userId, int bookId, const std::string &date, const std::string &action)
+void Borrower::appendRecordToCSV(const std::string &userName, const std::string &bookTitle, const std::string &date, const std::string &action)
 {
     std::ofstream out(csvFilePath, std::ios::app);
     if (!out.is_open())
@@ -32,19 +34,67 @@ void Borrower::appendRecordToCSV(int userId, int bookId, const std::string &date
         return;
     }
 
-    out << userId << "," << bookId << "," << date << "," << action << "\n";
+    out << userName << "," << bookTitle << "," << date << "," << action << "\n";
     out.close();
 }
 
-bool Borrower::borrowBook(int userId, int bookId, const std::string &date)
+bool Borrower::borrowBook(const std::string &userName, const std::string &bookTitle, const std::string &date)
 {
+    // Validate that book exists in BookManager
+    if (bookManager)
+    {
+        auto books = bookManager->searchBookByTitle(bookTitle);
+        if (books.empty())
+        {
+            std::cerr << "Error: Book '" << bookTitle << "' does not exist in the library!" << std::endl;
+            return false;
+        }
+    }
+
+    // Check if book is already borrowed by anyone
+    LinkedList<std::string> *bookBorrowers = bookToUsers->search(bookTitle);
+    if (bookBorrowers)
+    {
+        auto borrowers = bookBorrowers->toVector();
+        if (!borrowers.empty())
+        {
+            // Extract the borrower's name from first entry (format: "userName|date")
+            std::string firstEntry = borrowers[0];
+            size_t pipePos = firstEntry.find('|');
+            std::string currentBorrower = (pipePos != std::string::npos) ? firstEntry.substr(0, pipePos) : firstEntry;
+            std::cerr << "Error: Book '" << bookTitle << "' is already borrowed by '" << currentBorrower << "'!" << std::endl;
+            return false;
+        }
+    }
+
+    // Check if user already has this book borrowed
+    LinkedList<std::string> *userBorrows = userToBooks->search(userName);
+    if (userBorrows)
+    {
+        // Check if any entry starts with the bookTitle
+        for (const auto &entry : userBorrows->toVector())
+        {
+            // Entry format: "bookTitle|date"
+            size_t pipePos = entry.find('|');
+            if (pipePos != std::string::npos)
+            {
+                std::string existingBook = entry.substr(0, pipePos);
+                if (existingBook == bookTitle)
+                {
+                    std::cerr << "Error: User '" << userName << "' has already borrowed '" << bookTitle << "'!" << std::endl;
+                    return false;
+                }
+            }
+        }
+    }
+
     // Create formatted strings for the different lists
-    std::string userEntry = std::to_string(bookId) + "|" + date;   // stored in user->books
-    std::string bookEntry = std::to_string(userId) + "|" + date;   // stored in book->users
-    std::string hist = std::to_string(userId) + "," + std::to_string(bookId) + "," + date + ",borrow";
+    std::string userEntry = bookTitle + "|" + date; // stored in user->books
+    std::string bookEntry = userName + "|" + date;  // stored in book->users
+    std::string hist = userName + "," + bookTitle + "," + date + ",borrow";
 
     // Update userToBooks
-    LinkedList<std::string> *uList = userToBooks->search(userId);
+    LinkedList<std::string> *uList = userToBooks->search(userName);
     if (uList)
     {
         uList->insertAtEnd(userEntry);
@@ -53,11 +103,11 @@ bool Borrower::borrowBook(int userId, int bookId, const std::string &date)
     {
         LinkedList<std::string> newList;
         newList.insertAtEnd(userEntry);
-        userToBooks->insert(userId, newList);
+        userToBooks->insert(userName, newList);
     }
 
     // Update bookToUsers
-    LinkedList<std::string> *bList = bookToUsers->search(bookId);
+    LinkedList<std::string> *bList = bookToUsers->search(bookTitle);
     if (bList)
     {
         bList->insertAtEnd(bookEntry);
@@ -66,26 +116,26 @@ bool Borrower::borrowBook(int userId, int bookId, const std::string &date)
     {
         LinkedList<std::string> newList;
         newList.insertAtEnd(bookEntry);
-        bookToUsers->insert(bookId, newList);
+        bookToUsers->insert(bookTitle, newList);
     }
 
     // Add to in-memory history
     history->insertAtEnd(hist);
 
     // Persist by appending to CSV
-    appendRecordToCSV(userId, bookId, date, "borrow");
+    appendRecordToCSV(userName, bookTitle, date, "borrow");
 
-    std::cout << "Borrow recorded: user " << userId << " borrowed book " << bookId << " on " << date << std::endl;
+    std::cout << "Borrow recorded: user '" << userName << "' borrowed book '" << bookTitle << "' on " << date << std::endl;
     return true;
 }
 
-bool Borrower::returnBook(int userId, int bookId, const std::string &date)
+bool Borrower::returnBook(const std::string &userName, const std::string &bookTitle, const std::string &date)
 {
     // Construct formatted entries to remove
-    std::string userEntry = std::to_string(bookId) + "|" + date; // exact-date removal attempt
+    std::string userEntry = bookTitle + "|" + date; // exact-date removal attempt
 
     // Because the return date may differ from borrow date, we'll try to remove any entry with bookId for the user
-    LinkedList<std::string> *uList = userToBooks->search(userId);
+    LinkedList<std::string> *uList = userToBooks->search(userName);
     bool removedFromUser = false;
     if (uList)
     {
@@ -110,16 +160,20 @@ bool Borrower::returnBook(int userId, int bookId, const std::string &date)
                 {
                     std::stringstream ss(line);
                     std::string uStr, bStr, dStr, act;
-                    if (!std::getline(ss, uStr, ',')) continue;
-                    if (!std::getline(ss, bStr, ',')) continue;
-                    if (!std::getline(ss, dStr, ',')) continue;
-                    if (!std::getline(ss, act, ',')) continue;
+                    if (!std::getline(ss, uStr, ','))
+                        continue;
+                    if (!std::getline(ss, bStr, ','))
+                        continue;
+                    if (!std::getline(ss, dStr, ','))
+                        continue;
+                    if (!std::getline(ss, act, ','))
+                        continue;
 
-                    if (std::stoi(uStr) == userId && std::stoi(bStr) == bookId && act == "borrow")
+                    if (uStr == userName && bStr == bookTitle && act == "borrow")
                     {
                         foundDate = dStr;
                         // Try to remove that specific borrow entry
-                        std::string candidate = std::to_string(bookId) + "|" + foundDate;
+                        std::string candidate = bookTitle + "|" + foundDate;
                         if (uList->remove(candidate))
                         {
                             removedFromUser = true;
@@ -133,12 +187,12 @@ bool Borrower::returnBook(int userId, int bookId, const std::string &date)
     }
 
     // Remove from bookToUsers similarly
-    LinkedList<std::string> *bList = bookToUsers->search(bookId);
+    LinkedList<std::string> *bList = bookToUsers->search(bookTitle);
     bool removedFromBook = false;
     if (bList)
     {
         // try exact date remove
-        std::string exact = std::to_string(userId) + "|" + date;
+        std::string exact = userName + "|" + date;
         removedFromBook = bList->remove(exact);
 
         if (!removedFromBook)
@@ -153,15 +207,19 @@ bool Borrower::returnBook(int userId, int bookId, const std::string &date)
                 {
                     std::stringstream ss(line);
                     std::string uStr, bStr, dStr, act;
-                    if (!std::getline(ss, uStr, ',')) continue;
-                    if (!std::getline(ss, bStr, ',')) continue;
-                    if (!std::getline(ss, dStr, ',')) continue;
-                    if (!std::getline(ss, act, ',')) continue;
+                    if (!std::getline(ss, uStr, ','))
+                        continue;
+                    if (!std::getline(ss, bStr, ','))
+                        continue;
+                    if (!std::getline(ss, dStr, ','))
+                        continue;
+                    if (!std::getline(ss, act, ','))
+                        continue;
 
-                    if (std::stoi(uStr) == userId && std::stoi(bStr) == bookId && act == "borrow")
+                    if (uStr == userName && bStr == bookTitle && act == "borrow")
                     {
                         foundDate = dStr;
-                        std::string candidate = std::to_string(userId) + "|" + foundDate;
+                        std::string candidate = userName + "|" + foundDate;
                         if (bList->remove(candidate))
                         {
                             removedFromBook = true;
@@ -175,17 +233,17 @@ bool Borrower::returnBook(int userId, int bookId, const std::string &date)
     }
 
     // Record return in history and CSV regardless of whether removal succeeded (best-effort)
-    std::string hist = std::to_string(userId) + "," + std::to_string(bookId) + "," + date + ",return";
+    std::string hist = userName + "," + bookTitle + "," + date + ",return";
     history->insertAtEnd(hist);
-    appendRecordToCSV(userId, bookId, date, "return");
+    appendRecordToCSV(userName, bookTitle, date, "return");
 
     if (removedFromUser || removedFromBook)
     {
-        std::cout << "Return processed: user " << userId << " returned book " << bookId << " on " << date << std::endl;
+        std::cout << "Return processed: user '" << userName << "' returned book '" << bookTitle << "' on " << date << std::endl;
         return true;
     }
 
-    std::cout << "Return recorded, but no active borrow entry was found for user " << userId << " and book " << bookId << std::endl;
+    std::cout << "Return recorded, but no active borrow entry was found for user '" << userName << "' and book '" << bookTitle << "'" << std::endl;
     return false;
 }
 
@@ -201,74 +259,58 @@ void Borrower::loadBorrowRecordsFromCSV(const std::string &filename)
     std::string line;
     while (std::getline(in, line))
     {
-        if (line.size() == 0) continue;
+        if (line.empty())
+            continue;
+
         std::stringstream ss(line);
-        std::string uStr, bStr, dStr, act;
+        std::string userName, bookTitle, date, action;
+        if (!std::getline(ss, userName, ','))
+            continue;
+        if (!std::getline(ss, bookTitle, ','))
+            continue;
+        if (!std::getline(ss, date, ','))
+            continue;
+        if (!std::getline(ss, action, ','))
+            continue;
 
-        if (!std::getline(ss, uStr, ',')) continue;
-        if (!std::getline(ss, bStr, ',')) continue;
-        if (!std::getline(ss, dStr, ',')) continue;
-        if (!std::getline(ss, act, ',')) continue;
+        // Append to history
+        history->insertAtEnd(userName + "," + bookTitle + "," + date + "," + action);
 
-        int userId = 0;
-        int bookId = 0;
-        try
+        if (action == "borrow")
         {
-            userId = std::stoi(uStr);
-            bookId = std::stoi(bStr);
-        }
-        catch (...) { continue; }
-
-        // Always add to global history
-        std::string hist = uStr + "," + bStr + "," + dStr + "," + act;
-        history->insertAtEnd(hist);
-
-        if (act == "borrow")
-        {
-            // Add to userToBooks
-            LinkedList<std::string> *uList = userToBooks->search(userId);
-            std::string userEntry = std::to_string(bookId) + "|" + dStr;
-            if (uList)
+            // user -> books
+            if (auto uList = userToBooks->search(userName))
             {
-                uList->insertAtEnd(userEntry);
+                uList->insertAtEnd(bookTitle + "|" + date);
             }
             else
             {
                 LinkedList<std::string> newList;
-                newList.insertAtEnd(userEntry);
-                userToBooks->insert(userId, newList);
+                newList.insertAtEnd(bookTitle + "|" + date);
+                userToBooks->insert(userName, newList);
             }
 
-            // Add to bookToUsers
-            LinkedList<std::string> *bList = bookToUsers->search(bookId);
-            std::string bookEntry = std::to_string(userId) + "|" + dStr;
-            if (bList)
+            // book -> users
+            if (auto bList = bookToUsers->search(bookTitle))
             {
-                bList->insertAtEnd(bookEntry);
+                bList->insertAtEnd(userName + "|" + date);
             }
             else
             {
                 LinkedList<std::string> newList;
-                newList.insertAtEnd(bookEntry);
-                bookToUsers->insert(bookId, newList);
+                newList.insertAtEnd(userName + "|" + date);
+                bookToUsers->insert(bookTitle, newList);
             }
         }
-        else if (act == "return")
+        else if (action == "return")
         {
-            // On return, remove the corresponding borrow entries if present
-            LinkedList<std::string> *uList = userToBooks->search(userId);
-            if (uList)
+            if (auto uList = userToBooks->search(userName))
             {
-                // remove any entry matching bookId|date
-                std::string candidate = std::to_string(bookId) + "|" + dStr;
-                uList->remove(candidate);
+                uList->remove(bookTitle + "|" + date);
             }
-
-            LinkedList<std::string> *bList = bookToUsers->search(bookId);
-            if (bList)
+            if (auto bList = bookToUsers->search(bookTitle))
             {
-                std::string candidate = std::to_string(userId) + "|" + dStr;
-                bList->remove(candidate);
+                bList->remove(userName + "|" + date);
             }
         }
     }
@@ -276,14 +318,14 @@ void Borrower::loadBorrowRecordsFromCSV(const std::string &filename)
     in.close();
 }
 
-LinkedList<std::string> *Borrower::getUserActiveBorrows(int userId)
+LinkedList<std::string> *Borrower::getUserActiveBorrows(const std::string &userName)
 {
-    return userToBooks->search(userId);
+    return userToBooks->search(userName);
 }
 
-LinkedList<std::string> *Borrower::getBookActiveBorrowers(int bookId)
+LinkedList<std::string> *Borrower::getBookActiveBorrowers(const std::string &bookTitle)
 {
-    return bookToUsers->search(bookId);
+    return bookToUsers->search(bookTitle);
 }
 
 void Borrower::addHistoryEntry(const std::string &entry)

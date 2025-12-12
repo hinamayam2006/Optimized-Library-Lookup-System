@@ -114,5 +114,9 @@ vector<pair<K, V>> HashTable<K, V>::getAllEntries() const
 // Explicit template instantiation
 // -----------------------
 #include "../entities/header/book.h"
-template class HashTable<int, Book>;      // for your BookManager usage
-template class HashTable<string, string>; // if you need string/string hash table
+#include "../header/linkedList.h"
+
+template class HashTable<int, Book>;                       // for your BookManager usage
+template class HashTable<string, string>;                  // if you need string/string hash table
+template class HashTable<int, LinkedList<std::string>>;    // for Borrower module
+template class HashTable<string, LinkedList<std::string>>; // name/title based Borrower
