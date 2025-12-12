@@ -8,7 +8,7 @@ using namespace std;
 class TrieNode
 {
 public:
-    TrieNode *children[26];
+    TrieNode *children[128]; // Support ASCII characters
     bool isEnd;
 
     TrieNode();

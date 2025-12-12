@@ -1,5 +1,6 @@
 #ifndef LINKED_LIST_H
 #define LINKED_LIST_H
+#include <vector>
 
 using namespace std;
 
@@ -20,12 +21,15 @@ private:
 
 public:
     LinkedList();
+    LinkedList(const LinkedList &other);
+    LinkedList &operator=(const LinkedList &other);
     ~LinkedList();
 
     void insertAtEnd(const T &data);
     bool remove(const T &data);
     bool search(const T &data);
     void clear();
+    std::vector<T> toVector() const;
 };
 
 #endif

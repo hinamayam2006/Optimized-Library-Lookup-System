@@ -1,6 +1,6 @@
-# Optimized Library Lookup System
+# DSA Enabled Library Lookup System
 
-Library management system using differetn data structures to show the use case and benifit of them. Uses hashtables, trie, linked list, merge sort etc.
+A modern library management system with Qt GUI, demonstrating the practical use cases and benefits of various data structures. Implements hash tables, trie, linked list, merge sort, and more with a user-friendly graphical interface.
 
 ## Table of Contents
 
@@ -27,6 +27,14 @@ All data is stored in a **Hash Table** for O(1) average-case search and persiste
 
 ## Features
 
+### 🎨 **Modern Qt GUI**
+
+- Clean, intuitive tabbed interface
+- Responsive layout with 1400x900 window size
+- Real-time status updates with color-coded messages
+- Auto-populating date fields for borrowing operations
+- Compact list displays with optimized spacing
+
 ### 1. **Book Management**
 
 - Add books with ID, title, author, year, and publisher
@@ -34,31 +42,39 @@ All data is stored in a **Hash Table** for O(1) average-case search and persiste
 - Update book information
 - Delete books
 - Load/save books from/to CSV files
+- Display all books in organized list view
 
 ### 2. **Auto-Completion (Trie)**
 
 - Fast book title suggestions as you type
 - Case-insensitive search
 - Prefix-based filtering
+- Interactive suggestion selection
 
-### 3. **Efficient Searching**
+### 3. **Efficient Searching & Sorting**
 
 - Search books by partial title match
 - Case-insensitive search
 - Returns all matching books
-
-### 4. **High-Performance Sorting (Merge Sort)**
-
 - Sort by title alphabetically
 - Sort by publication year
 - Sort by author name
 - O(n log n) time complexity
 
+### 4. **Borrowing System**
+
+- Borrow and return books
+- Track active borrows by user
+- Track borrowers by book title
+- Complete borrowing history
+- Automatic date population
+- Validation for book existence
+
 ### 5. **Data Persistence**
 
-- Automatic CSV storage on every operation
-- Load books on startup
-- Real-time synchronization between memory and file
+- Automatic CSV storage
+- Load books and borrow records on startup
+- Real-time synchronization between memory and files
 
 ## 📁 Project Structure
 
@@ -102,8 +118,8 @@ Optimized-Library-Lookup-System/
 │   │       ├── Borrower.cpp
 │   │       └── SearchAndSort.cpp
 │   └── UI/
-│       ├── consoleUI.h
-│       └── consoleUI.cpp
+│       ├── LibraryGUI.h        # Qt GUI header
+│       └── LibraryGUI.cpp      # Qt GUI implementation
 ```
 
 ## Data Structures
@@ -201,82 +217,109 @@ searchSort.sortBooksByTitle(allBooks, count);
 
 ### Prerequisites
 
-- C++11 or higher
-- CMake 3.10+
-- GCC/Clang compiler
+- **C++17 or higher**
+- **CMake 3.16+**
+- **Qt 6.10.1** (MinGW 64-bit build)
+- **MinGW-w64 GCC 13.2.0** or later
+- **Windows 10 or later**
+
+### Qt Installation
+
+1. Download Qt 6.10.1 from [qt.io](https://www.qt.io/download)
+2. Install MinGW 64-bit version
+3. Note your Qt installation path (e.g., `D:/HP/BigThings/6.10.1/mingw_64`)
 
 ### Build Steps
 
-```bash
+```powershell
 # Navigate to project directory
-cd Optimized-Library-Lookup-System
+cd D:\HP\Projects\DSAE\Optimized-Library-Lookup-System
 
-# Create build directory
+# Create build directory (if not exists)
 mkdir build
 cd build
 
-# Generate build files
-cmake ..
+# Configure with CMake (update Qt path as needed)
+cmake -G "MinGW Makefiles" ..
 
 # Build the project
-cmake --build .
+mingw32-make
 
 # Run the executable
-./OptimizedLibraryLookupSystem
+.\LibrarySystem.exe
+```
+
+### First Time Setup
+
+After building for the first time, you may need to deploy Qt DLLs:
+
+```powershell
+# From build directory
+D:\HP\BigThings\6.10.1\mingw_64\bin\windeployqt.exe LibrarySystem.exe
+```
+
+### Quick Rebuild
+
+After making code changes:
+
+```powershell
+cd build
+mingw32-make
+.\LibrarySystem.exe
 ```
 
 ## Usage
 
-### Adding a Book
+### GUI Overview
 
-```cpp
-bookManager.addBook(1, "1984", "George Orwell", 1949, "Secker & Warburg");
-// Automatically saved to book.csv
-```
+The application features a tabbed interface with three main sections:
 
-### Searching
+#### 📚 Book Management Tab
 
-```cpp
-// Search by ID
-Book* book = bookManager.searchBook(1);
+- **Input Fields**: Book ID, Title, Author, Year, Publisher
+- **Operations**: Add, Update, Delete, Search by ID
+- **File Operations**: Load CSV, Save CSV, Display All
+- **Display Area**: Shows all books or search results
 
-// Search by title (partial match)
-vector<Book*> results = searchSort.searchBooksByTitle("1984");
+#### 🔍 Search & Sort Tab
 
-// Auto-complete
-vector<string> suggestions = searchSort.autoComplete("19");
-// Returns: ["1984"]
-```
+- **Search Input**: Type to search with auto-complete suggestions
+- **Search Operation**: Search by partial title match
+- **Sort Options**: Sort by Title, Year, or Author
+- **Results Display**: Shows filtered or sorted results
+- **Reload Trie**: Refresh auto-complete database
 
-### Sorting
+#### 👥 Borrowing Tab
 
-```cpp
-Book* books[100];
-// ... populate array ...
+- **Input Fields**: User Name, Book Title, Date (auto-populated)
+- **Operations**: Borrow Book, Return Book
+- **View Options**:
+  - View User Borrows (by user name)
+  - View Book Borrowers (by book title)
+  - View Complete History
+- **Load Records**: Reload borrowing data from CSV
 
-// Sort by title
-searchSort.sortBooksByTitle(books, count);
+### Quick Start Guide
 
-// Sort by year
-searchSort.sortBooksByYear(books, count);
+1. **Launch Application**: Run `LibrarySystem.exe`
+2. **Load Books**: Click "Load CSV" in Book Management tab
+3. **Add Books**: Fill in book details and click "Add Book"
+4. **Search**: Use Search & Sort tab for finding books
+5. **Borrow**: Go to Borrowing tab, enter details, click "Borrow Book"
 
-// Sort by author
-searchSort.sortBooksByAuthor(books, count);
-```
+### Keyboard Shortcuts
 
-### Updating Books
+- Type in search field for instant auto-complete suggestions
+- Click suggestions to auto-fill search term
+- Status messages appear at bottom of each tab
 
-```cpp
-bookManager.updateBook(1, "1984 (Updated Edition)", "George Orwell", 1949);
-// Automatically saved to book.csv
-```
+### Data Files
 
-### Deleting Books
+Ensure these CSV files exist in the `data/` directory:
 
-```cpp
-bookManager.deleteBook(1);
-// Automatically saved to book.csv
-```
+- `book.csv` - Book database
+- `borrow_records.csv` - Borrowing records
+- `user.csv` - User information (optional)
 
 ## File Format
 
@@ -335,13 +378,16 @@ The CSV file is automatically maintained and synced with the in-memory Hash Tabl
 
 ## Key Features
 
+✅ **Modern Qt GUI** - Clean, responsive interface with tabbed layout
 ✅ **Real-time Data Persistence** - Automatic CSV updates
-✅ **Fast Lookup** - O(1) average search by ID
-✅ **Auto-completion** - Efficient prefix-based suggestions
-✅ **Efficient Sorting** - Guaranteed O(n log n) performance
+✅ **Fast Lookup** - O(1) average search by ID using hash tables
+✅ **Auto-completion** - Efficient prefix-based suggestions with Trie
+✅ **Efficient Sorting** - Guaranteed O(n log n) performance with merge sort
+✅ **Borrowing System** - Complete book lending and tracking functionality
 ✅ **Type-Safe** - Template-based generic data structures
 ✅ **Memory Efficient** - Chaining-based hash table
-✅ **Easy Integration** - Modular design with clear APIs
+✅ **User-Friendly** - Color-coded status messages and auto-populating fields
+✅ **No Console Window** - Pure GUI application (Windows subsystem)
 
 ## Implementation Notes
 
@@ -350,3 +396,26 @@ The CSV file is automatically maintained and synced with the in-memory Hash Tabl
 - Wrapper structures (BookTitleWrapper, BookYearWrapper, BookAuthorWrapper) enable merge sort compatibility
 - Hash table uses modulo operation for hashing integers
 - Automatic file syncing occurs after every add/update/delete operation
+- Qt signals and slots used for event handling
+- QListWidget items use compact spacing (2px vertical padding) for efficient display
+- Date fields auto-populate with current date in YYYY-MM-DD format
+- Window size: 1400x900 pixels (adjustable)
+- Compiled as Windows GUI application (no console window)
+
+## Technology Stack
+
+- **Language**: C++17
+- **GUI Framework**: Qt 6.10.1
+- **Build System**: CMake 3.16+
+- **Compiler**: MinGW-w64 GCC 13.2.0
+- **Platform**: Windows 10+
+
+## Migration History
+
+This project was originally built with FLTK GUI and has been successfully migrated to Qt 6 for:
+
+- Modern look and feel
+- Better cross-platform support
+- Enhanced widget capabilities
+- Improved layout management
+- Native Windows integration

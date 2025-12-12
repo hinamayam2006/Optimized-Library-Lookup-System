@@ -1,14 +1,42 @@
 #include "../header/linkedList.h"
 #include <string>
+#include <vector>
 using namespace std;
 
 template <typename T>
 LinkedList<T>::LinkedList() : head(nullptr) {}
 
 template <typename T>
+LinkedList<T>::LinkedList(const LinkedList &other) : head(nullptr)
+{
+    Node<T> *temp = other.head;
+    while (temp)
+    {
+        insertAtEnd(temp->data);
+        temp = temp->next;
+    }
+}
+
+template <typename T>
 LinkedList<T>::~LinkedList()
 {
     clear();
+}
+
+template <typename T>
+LinkedList<T> &LinkedList<T>::operator=(const LinkedList &other)
+{
+    if (this == &other)
+        return *this;
+    clear();
+    head = nullptr;
+    Node<T> *temp = other.head;
+    while (temp)
+    {
+        insertAtEnd(temp->data);
+        temp = temp->next;
+    }
+    return *this;
 }
 
 template <typename T>
@@ -76,6 +104,20 @@ void LinkedList<T>::clear()
         delete temp;
         temp = next;
     }
+    head = nullptr;
+}
+
+template <typename T>
+std::vector<T> LinkedList<T>::toVector() const
+{
+    std::vector<T> out;
+    Node<T> *temp = head;
+    while (temp)
+    {
+        out.push_back(temp->data);
+        temp = temp->next;
+    }
+    return out;
 }
 
 template class LinkedList<int>;

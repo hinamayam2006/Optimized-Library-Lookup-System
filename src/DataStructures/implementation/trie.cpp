@@ -3,7 +3,7 @@
 TrieNode::TrieNode()
 {
     isEnd = false;
-    for (int i = 0; i < 26; i++)
+    for (int i = 0; i < 128; i++)
         children[i] = nullptr;
 }
 
@@ -17,8 +17,8 @@ void Trie::insert(const string &word)
     TrieNode *node = root;
     for (char c : word)
     {
-        int idx = tolower(c) - 'a';
-        if (idx < 0 || idx >= 26)
+        int idx = (unsigned char)tolower(c);
+        if (idx < 0 || idx >= 128)
             continue;
         if (!node->children[idx])
             node->children[idx] = new TrieNode();
@@ -32,8 +32,8 @@ TrieNode *Trie::searchPrefix(const string &prefix)
     TrieNode *node = root;
     for (char c : prefix)
     {
-        int idx = tolower(c) - 'a';
-        if (idx < 0 || idx >= 26)
+        int idx = (unsigned char)tolower(c);
+        if (idx < 0 || idx >= 128)
             return nullptr;
         if (!node->children[idx])
             return nullptr;
@@ -50,9 +50,9 @@ void Trie::collect(TrieNode *node, string prefix, vector<string> &results)
     if (node->isEnd)
         results.push_back(prefix);
 
-    for (int i = 0; i < 26; i++)
+    for (int i = 0; i < 128; i++)
         if (node->children[i])
-            collect(node->children[i], prefix + char('a' + i), results);
+            collect(node->children[i], prefix + char(i), results);
 }
 
 vector<string> Trie::getAutoComplete(const string &prefix)

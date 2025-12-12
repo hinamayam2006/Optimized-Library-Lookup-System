@@ -1,9 +1,11 @@
 #include "BookManager.h"
+#include <algorithm>
+#include <cctype>
 
 BookManager::BookManager()
 {
-    bookTable = new HashTable<int, Book>(); // Initialize the hash table
-    csvFilePath = "../../../data/book.csv"; // Will be set when loading
+    bookTable = new HashTable<int, Book>();                                            // Initialize the hash table
+    csvFilePath = "D:/HP/Projects/DSAE/Optimized-Library-Lookup-System/data/book.csv"; // Use consistent path with GUI
 }
 
 BookManager::~BookManager()
@@ -14,6 +16,13 @@ BookManager::~BookManager()
 // 1. ADD FUNCTION
 void BookManager::addBook(int id, std::string title, std::string author, int year, std::string publisher)
 {
+    // Disallow duplicate IDs to keep primary key uniqueness
+    if (bookTable->search(id) != nullptr)
+    {
+        std::cout << "Book ID already exists. Skipping add." << std::endl;
+        return;
+    }
+
     // Create a new book object
     Book newBook(id, title, author, year, publisher);
 
@@ -30,12 +39,41 @@ void BookManager::addBook(int id, std::string title, std::string author, int yea
     }
 }
 
-// 2. SEARCH FUNCTION
+// 2. SEARCH FUNCTION BY ID
 Book *BookManager::searchBook(int id)
 {
     // Use the Hash Table's search function
     // This is O(1) on average - very efficient!
     return bookTable->search(id);
+}
+
+// 2B. SEARCH FUNCTION BY TITLE
+std::vector<Book> BookManager::searchBookByTitle(std::string title)
+{
+    std::vector<Book> results;
+
+    // Convert search term to lowercase for case-insensitive search
+    std::string lowerSearchTerm = title;
+    std::transform(lowerSearchTerm.begin(), lowerSearchTerm.end(), lowerSearchTerm.begin(), ::tolower);
+
+    // Get all books from hash table
+    auto allBooks = getAllBooks();
+
+    // Search through all books for title matches
+    for (const auto &entry : allBooks)
+    {
+        const Book &book = entry.second;
+        std::string lowerTitle = book.getTitle();
+        std::transform(lowerTitle.begin(), lowerTitle.end(), lowerTitle.begin(), ::tolower);
+
+        // Check if the search term is found in the title
+        if (lowerTitle.find(lowerSearchTerm) != std::string::npos)
+        {
+            results.push_back(book);
+        }
+    }
+
+    return results;
 }
 
 // 3. DELETE FUNCTION
@@ -105,41 +143,49 @@ void BookManager::loadBooksFromCSV(std::string filename)
 
     while (std::getline(file, line))
     {
-        std::stringstream ss(line);
-        std::string segment;
+        try
+        {
+            std::stringstream ss(line);
+            std::string segment;
 
-        // Variables to hold parsed data
-        int id;
-        std::string title, author, yearStr, publisher;
-        int year;
+            // Variables to hold parsed data
+            int id;
+            std::string title, author, yearStr, publisher;
+            int year;
 
-        // Assumes CSV format: ID,Title,Author,Year,Publisher
+            // Assumes CSV format: ID,Title,Author,Year,Publisher
 
-        // 1. Get ID
-        if (!std::getline(ss, segment, ','))
+            // 1. Get ID
+            if (!std::getline(ss, segment, ','))
+                continue;
+            id = std::stoi(segment);
+
+            // 2. Get Title
+            if (!std::getline(ss, title, ','))
+                continue;
+
+            // 3. Get Author
+            if (!std::getline(ss, author, ','))
+                continue;
+
+            // 4. Get Year
+            if (!std::getline(ss, yearStr, ','))
+                continue;
+            year = std::stoi(yearStr);
+
+            // 5. Get Publisher (Optional, handles if missing)
+            if (!std::getline(ss, publisher, ','))
+                publisher = "Unknown";
+
+            // Reuse your existing add function to store it in the Hash Table!
+            this->addBook(id, title, author, year, publisher);
+        }
+        catch (const std::exception &e)
+        {
+            // Skip malformed rows
+            std::cerr << "Warning: Skipping malformed CSV row: " << line << std::endl;
             continue;
-        id = std::stoi(segment);
-
-        // 2. Get Title
-        if (!std::getline(ss, title, ','))
-            continue;
-
-        // 3. Get Author
-        if (!std::getline(ss, author, ','))
-            continue;
-
-        // 4. Get Year
-        if (!std::getline(ss, yearStr, ','))
-            continue;
-        year = std::stoi(yearStr);
-
-        // 5. Get Publisher (Optional, handles if missing)
-        if (!std::getline(ss, publisher, ','))
-            publisher = "Unknown";
-
-        // Reuse your existing add function to store it in the Hash Table!
-        // (Pass 'true' or a flag if you want to silence the "Book added" print statements)
-        this->addBook(id, title, author, year, publisher);
+        }
     }
 
     file.close();
