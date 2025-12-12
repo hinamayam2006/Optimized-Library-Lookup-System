@@ -1,68 +1,76 @@
-#include "BookManager.h"
+#include "BookManager.h"   //includes header file
 #include <algorithm>
 #include <cctype>
 
+// constructor
 BookManager::BookManager()
 {
-    bookTable = new HashTable<int, Book>();                                            // Initialize the hash table
-    csvFilePath = "D:/HP/Projects/DSAE/Optimized-Library-Lookup-System/data/book.csv"; // Use consistent path with GUI
+    // Initializing hash table for storage
+    bookTable = new HashTable<int, Book>();                                            
+    // CSV file path
+    csvFilePath = "D:/HP/Projects/DSAE/Optimized-Library-Lookup-System/data/book.csv"; 
 }
 
+// destructor
 BookManager::~BookManager()
 {
+    // Clean up allocated memory to avoid memory leaks
     delete bookTable;
 }
 
-// 1. ADD FUNCTION
+//-----------1.ADD BOOK FUNCTION-----------
+// Adds a new book to the hash table and auto-saves to CSV
 void BookManager::addBook(int id, std::string title, std::string author, int year, std::string publisher)
 {
-    // Disallow duplicate IDs to keep primary key uniqueness
+    // Check if book's ID is unique before adding
     if (bookTable->search(id) != nullptr)
     {
         std::cout << "Book ID already exists. Skipping add." << std::endl;
         return;
     }
 
-    // Create a new book object
+    // Creation of new book object
     Book newBook(id, title, author, year, publisher);
 
-    // Insert into hash table
-    // The Key is the ID, the Value is the Book object
+    // Insertion in hash table
+    // Key is ID, Value is Book object
     bookTable->insert(id, newBook);
 
     std::cout << "Book added successfully: " << title << std::endl;
 
-    // Auto-save to CSV file if path is set
+    // Auto-save changes to CSV file
     if (!csvFilePath.empty())
     {
         saveBooksToCSV(csvFilePath);
     }
 }
 
-// 2. SEARCH FUNCTION BY ID
+// -----------2-A. SEARCHING BOOK BY ID-----------
+//Hash table lookup by ID
 Book *BookManager::searchBook(int id)
 {
-    // Use the Hash Table's search function
-    // This is O(1) on average - very efficient!
-    return bookTable->search(id);
+    // Use Hash Table's search function
+    return bookTable->search(id);    // O(1) average time complexity
 }
 
-// 2B. SEARCH FUNCTION BY TITLE
+// -----------2-B. SEARCHING BOOK BY TITLE-----------
+//linear search through all books for title match
 std::vector<Book> BookManager::searchBookByTitle(std::string title)
 {
     std::vector<Book> results;
 
-    // Convert search term to lowercase for case-insensitive search
+    // Convert searched book's title to lowercase for case-insensitivity
     std::string lowerSearchTerm = title;
     std::transform(lowerSearchTerm.begin(), lowerSearchTerm.end(), lowerSearchTerm.begin(), ::tolower);
 
-    // Get all books from hash table
+    // Get all books from hash table to iterate through
     auto allBooks = getAllBooks();
 
-    // Search through all books for title matches
+    // Search through all books for matching title
     for (const auto &entry : allBooks)
     {
         const Book &book = entry.second;
+        // Convert current book title to lowercase
         std::string lowerTitle = book.getTitle();
         std::transform(lowerTitle.begin(), lowerTitle.end(), lowerTitle.begin(), ::tolower);
 
@@ -76,19 +84,21 @@ std::vector<Book> BookManager::searchBookByTitle(std::string title)
     return results;
 }
 
-// 3. DELETE FUNCTION
+//-----------3. DELETE FUNCTION-----------
+// Deletes a book by ID and updates CSV
 bool BookManager::deleteBook(int id)
 {
+    // Check if book exists
     if (bookTable->search(id) == nullptr)
     {
         std::cout << "Book not found!" << std::endl;
         return false;
     }
-
+    // Remove book from hash table
     bookTable->remove(id);
     std::cout << "Book deleted successfully." << std::endl;
 
-    // Auto-save to CSV file if path is set
+    // Update CSV file after deletion
     if (!csvFilePath.empty())
     {
         saveBooksToCSV(csvFilePath);
@@ -97,20 +107,21 @@ bool BookManager::deleteBook(int id)
     return true;
 }
 
-// 4. UPDATE FUNCTION
+//---------- 4. UPDATE FUNCTION-----------
+// Updates book details and auto-saves to CSV
 bool BookManager::updateBook(int id, std::string newTitle, std::string newAuthor, int newYear)
 {
     Book *book = bookTable->search(id);
-
+    // Check if book exists
     if (book != nullptr)
     {
-        // Update the fields
+        // Update the fields of the book
         book->setTitle(newTitle);
         book->setAuthor(newAuthor);
         book->setYear(newYear);
         std::cout << "Book updated successfully." << std::endl;
 
-        // Auto-save to CSV file if path is set
+        // Save changes to CSV file
         if (!csvFilePath.empty())
         {
             saveBooksToCSV(csvFilePath);
@@ -125,10 +136,11 @@ bool BookManager::updateBook(int id, std::string newTitle, std::string newAuthor
     }
 }
 
-// 5. LOAD BOOKS FROM CSV FUNCTION
+//---------- 5. LOAD BOOKS FROM CSV FUNCTION-----------
+// Loads books from a CSV file into the hash table
 void BookManager::loadBooksFromCSV(std::string filename)
 {
-    csvFilePath = filename; // Store the filename for auto-saving
+    csvFilePath = filename;
     std::ifstream file(filename);
 
     if (!file.is_open())
@@ -138,7 +150,7 @@ void BookManager::loadBooksFromCSV(std::string filename)
     }
 
     std::string line;
-    // Skip the header line if your CSV has one (e.g., "ID,Title,Author...")
+    // Skip header line
     // std::getline(file, line);
 
     while (std::getline(file, line))
@@ -153,7 +165,7 @@ void BookManager::loadBooksFromCSV(std::string filename)
             std::string title, author, yearStr, publisher;
             int year;
 
-            // Assumes CSV format: ID,Title,Author,Year,Publisher
+            // CSV format: ID,Title,Author,Year,Publisher
 
             // 1. Get ID
             if (!std::getline(ss, segment, ','))
@@ -173,12 +185,13 @@ void BookManager::loadBooksFromCSV(std::string filename)
                 continue;
             year = std::stoi(yearStr);
 
-            // 5. Get Publisher (Optional, handles if missing)
+            // 5. Get Publisher (Optional)
             if (!std::getline(ss, publisher, ','))
                 publisher = "Unknown";
 
-            // Reuse your existing add function to store it in the Hash Table!
-            this->addBook(id, title, author, year, publisher);
+            // Add book to the hash table
+            Book newBook(id, title, author, year, publisher);
+            bookTable->insert(id, newBook);
         }
         catch (const std::exception &e)
         {
@@ -192,7 +205,8 @@ void BookManager::loadBooksFromCSV(std::string filename)
     std::cout << "Data loaded successfully from " << filename << std::endl;
 }
 
-// SAVE BOOKS TO CSV FUNCTION
+//---------6. SAVE BOOKS TO CSV FUNCTION-----------
+// Saves all books from the hash table to a CSV file
 void BookManager::saveBooksToCSV(std::string filename)
 {
     std::ofstream file(filename);
@@ -209,7 +223,7 @@ void BookManager::saveBooksToCSV(std::string filename)
     // Get all books from the hash table
     auto entries = bookTable->getAllEntries();
 
-    // Write each book to CSV
+    // loop through all books and write each book to CSV
     for (const auto &entry : entries)
     {
         const Book &book = entry.second;
@@ -224,7 +238,7 @@ void BookManager::saveBooksToCSV(std::string filename)
     std::cout << "Data saved successfully to " << filename << std::endl;
 }
 
-// GET ALL BOOKS FUNCTION
+//----------7. GET ALL BOOKS FUNCTION-----------
 std::vector<std::pair<int, Book>> BookManager::getAllBooks()
 {
     return bookTable->getAllEntries();
