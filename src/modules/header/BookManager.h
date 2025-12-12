@@ -1,18 +1,22 @@
 #ifndef BOOKMANAGER_H
 #define BOOKMANAGER_H
 
-#include "../entities/header/book.h"               // Adjust path if necessary
-#include "../../DataStructures/header/HashTable.h" // Adjust path if necessary
+//dependencies
+#include "../entities/header/book.h"               // include Book entity
+#include "../../DataStructures/header/HashTable.h" // include to Hash Table
 #include <string>
+#include <vector>
 #include <fstream> // Required for file handling
 #include <sstream> // Required for string splitting
 #include <iostream>
 
+// Controls the operations related to books
 class BookManager
 {
 private:
-    // Assuming the HashTable stores <int key, Book value>
+    //Stores books using their ID as the unique key
     HashTable<int, Book> *bookTable;
+    std::string csvFilePath; // Store the CSV file path for auto-saving
 
 public:
     // Constructor
@@ -21,13 +25,29 @@ public:
     // Destructor
     ~BookManager();
 
-    // add, delete, search, update and loading books functions:
+    // Adds a new book to the library and triggers an auto-save
     void addBook(int id, std::string title, std::string author, int year, std::string publisher = "Unknown");
+
+    // Removes a book by its unique ID. Returns true if successful
     bool deleteBook(int id);
-    Book *searchBook(int id); // Returns pointer to book if found, nullptr if not
+
+    // Updates details (Title, Author, Year) of an existing book. Returns true if successful.
     bool updateBook(int id, std::string newTitle, std::string newAuthor, int newYear);
+
+    // Reads the CSV file
     void loadBooksFromCSV(std::string filename);
-    // Helper to load/save data might be needed later, but focus on these 4 first.
+
+    // Overwrites the CSV file with current data to ensure changes are saved
+    void saveBooksToCSV(std::string filename);
+
+    // O(1) complexity: Finds a book by its ID, returns nullptr if not found
+    Book *searchBook(int id);  
+    
+    // O(N) complexity: Finds all books containing searched title, returns pointer to book if found, nullptr if not
+    std::vector<Book> searchBookByTitle(std::string title); // Search by title (case-insensitive partial match)
+    
+    // Converts Hash Table data into a Vector 
+    std::vector<std::pair<int, Book>> getAllBooks();
 };
 
 #endif
